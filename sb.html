@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!-- saved from url=(0042)http://120.112.23.53/hpball/volleysb5.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>排球記分板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        :root {
+            --primary-bg: #1a1a1a;
+            --button-bg: #444;
+            --plus-button: #4CAF50;
+            --minus-button: #f44336;
+            --text-color: white;
+            --serve-color: #FFA500;
+        }
+        
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scoreboard {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: clamp(10px, 2vw, 20px);
+            gap: 10px;
+        }
+        
+        .team {
+            text-align: center;
+            width: 48%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+        }
+        
+        .team-name-container {
+            height: clamp(3rem, 5vh, 5rem);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .team-name {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            cursor: pointer;
+            padding: 10px;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s;
+        }
+        
+        .team-name:hover {
+            background-color: #333;
+            border-radius: 10px;
+        }
+        
+        .score {
+            font-size: clamp(8rem, 25vw, 30rem);
+            font-weight: bold;
+            line-height: 0.8;
+            margin: 0;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            padding: 20px 0;
+        }
+        
+        .score.highlight {
+            transform: scale(1.1);
+            color: var(--plus-button);
+        }
+        
+        .score-controls {
+            margin-top: clamp(10px, 2vh, 20px);
+        }
+        
+        .score-btn {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            padding: clamp(10px, 2vw, 20px) clamp(25px, 4vw, 50px);
+            margin: 5px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            transition: transform 0.2s, background-color 0.3s;
+        }
+        
+        .score-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .score-btn.plus {
+            background-color: var(--plus-button);
+        }
+        
+        .score-btn.minus {
+            background-color: var(--minus-button);
+        }
+        
+        .player-numbers {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(5px, 1vw, 10px);
+            margin-top: clamp(10px, 2vh, 20px);
+            padding: 5px;
+        }
+        
+        @media (min-width: 768px) {
+            .player-numbers {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+        
+        .player-btn {
+            width: clamp(40px, 8vw, 60px);
+            height: clamp(40px, 8vw, 60px);
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            border: none;
+            border-radius: 50%;
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .player-btn.served {
+            background-color: var(--serve-color);
+            transform: scale(1.1);
+        }
+        
+        .control-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .control-btn {
+            padding: clamp(10px, 2vw, 15px) clamp(20px, 3vw, 30px);
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-color);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .reset-btn {
+            background-color: #ff4444;
+        }
+        
+        .fullscreen-btn {
+            background-color: #2196F3;
+        }
+        
+        .name-input {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            width: auto;
+            min-width: 200px;
+        }
+        
+        @media (max-width: 768px) {
+            .score {
+                font-size: clamp(6rem, 20vw, 25rem);
+                padding: 10px 0;
+            }
+        }
+        
+        @media (orientation: landscape) and (max-height: 600px) {
+            .scoreboard {
+                padding: 5px;
+            }
+            
+            .team-name-container {
+                height: auto;
+            }
+            
+            .score {
+                font-size: clamp(5rem, 15vh, 20rem);
+                padding: 5px 0;
+            }
+            
+            .player-numbers {
+                margin-top: 5px;
+            }
+            
+            .score-controls {
+                margin-top: 5px;
+            }
+            
+            .player-btn {
+                width: clamp(30px, 6vh, 50px);
+                height: clamp(30px, 6vh, 50px);
+                font-size: clamp(1rem, 2vh, 1.5rem);
+            }
+        }
+        
+        @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+            .team-name {
+                font-size: clamp(2rem, 5vw, 4rem);
+            }
+            
+            .score {
+                font-size: clamp(8rem, 20vw, 25rem);
+            }
+            
+            .player-btn {
+                width: clamp(50px, 10vw, 80px);
+                height: clamp(50px, 10vw, 80px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scoreboard">
+        <div class="team">
+            <div class="team-name-container">
+                <div class="team-name" id="team1-name">主隊</div>
+            </div>
+            <div id="team1-score" class="score">0</div>
+            <div class="score-controls">
+                <button class="score-btn minus" onclick="updateScore('team1', -1)">-</button>
+                <button class="score-btn plus" onclick="updateScore('team1', 1)">+</button>
+            </div>
+            <div class="player-numbers" id="team1-players">
+                <button class="player-btn" onclick="toggleServe('team1', 0)" ondblclick="editNumber('team1', 0)">1</button>
+                <button class="player-btn" onclick="toggleServe('team1', 1)" ondblclick="editNumber('team1', 1)">2</button>
+                <button class="player-btn" onclick="toggleServe('team1', 2)" ondblclick="editNumber('team1', 2)">3</button>
+                <button class="player-btn" onclick="toggleServe('team1', 3)" ondblclick="editNumber('team1', 3)">4</button>
+                <button class="player-btn" onclick="toggleServe('team1', 4)" ondblclick="editNumber('team1', 4)">5</button>
+                <button class="player-btn" onclick="toggleServe('team1', 5)" ondblclick="editNumber('team1', 5)">6</button>
+            </div>
+        </div>
+        
+        <div class="team">
+            <div class="team-name-container">
+                <div class="team-name" id="team2-name">客隊</div>
+            </div>
+            <div id="team2-score" class="score">0</div>
+            <div class="score-controls">
+                <button class="score-btn minus" onclick="updateScore('team2', -1)">-</button>
+                <button class="score-btn plus" onclick="updateScore('team2', 1)">+</button>
+            </div>
+            <div class="player-numbers" id="team2-players">
+                <button class="player-btn" onclick="toggleServe('team2', 0)" ondblclick="editNumber('team2', 0)">1</button>
+                <button class="player-btn" onclick="toggleServe('team2', 1)" ondblclick="editNumber('team2', 1)">2</button>
+                <button class="player-btn" onclick="toggleServe('team2', 2)" ondblclick="editNumber('team2', 2)">3</button>
+                <button class="player-btn" onclick="toggleServe('team2', 3)" ondblclick="editNumber('team2', 3)">4</button>
+                <button class="player-btn" onclick="toggleServe('team2', 4)" ondblclick="editNumber('team2', 4)">5</button>
+                <button class="player-btn" onclick="toggleServe('team2', 5)" ondblclick="editNumber('team2', 5)">6</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-buttons">
+        <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">全螢幕</button>
+        <button class="control-btn reset-btn" onclick="resetScores()">重置分數</button>
+    </div>
+
+    <script>
+        let scores = {
+            team1: 0,
+            team2: 0
+        };
+
+        function updateScore(team, value) {
+            const scoreElement = document.getElementById(`${team}-score`);
+            scores[team] = Math.max(0, scores[team] + value);
+            scoreElement.textContent = scores[team];
+            
+            // 添加動畫效果
+            scoreElement.classList.add('highlight');
+            setTimeout(() => {
+                scoreElement.classList.remove('highlight');
+            }, 200);
+        }
+
+        function resetScores() {
+            if (confirm('確定要重置分數嗎？')) {
+                scores.team1 = 0;
+                scores.team2 = 0;
+                document.getElementById('team1-score').textContent = '0';
+                document.getElementById('team2-score').textContent = '0';
+                
+                // 重置發球標記
+                document.querySelectorAll('.player-btn').forEach(btn => {
+                    btn.classList.remove('served');
+                });
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function toggleServe(team, playerIndex) {
+            const allButtons = document.querySelectorAll('.player-btn');
+            allButtons.forEach(btn => btn.classList.remove('served'));
+            
+            const button = document.querySelector(`#${team}-players .player-btn:nth-child(${playerIndex + 1})`);
+            button.classList.add('served');
+        }
+
+        function editName(team) {
+            const nameElement = document.getElementById(`${team}-name`);
+            const currentName = nameElement.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'name-input';
+            
+            input.onblur = function() {
+                nameElement.textContent = this.value || currentName;
+                nameElement.style.display = '';
+                input.remove();
+            };
+            
+            input.onkeydown = function(e) {
+                if (e.key === 'Enter') {
+                    this.blur();
+                }
+            };
+            
+            nameElement.style.display = 'none';
+            nameElement.parentNode.insertBefore(input, nameElement);
+            input.focus();
+            input.select();
+        }
+
+        // 為隊伍名稱添加點擊事件
+        document.addEventListener('DOMContentLoaded', function() {
+            ['team1', 'team2'].forEach(team => {
+                const nameElement = document.getElementById(`${team}-name`);
+                nameElement.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    editName(team);
+                });
+            });
+        });
+
+        // 防止雙擊選中文字
+        document.addEventListener('mousedown', function(e) {
+            if (e.detail > 1) {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+
+<div class="cgw-ext" data-ext-id="pdnenlnelpdomajfejgapbdpmjkfpjkp"></div><div class="cgw_main_container" style="font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; line-height: 18px; user-select: text; font-weight: normal; letter-spacing: normal; -webkit-font-smoothing: auto;"><template shadowrootmode="open"><style>.codeblocks{counter-reset:sh-line-number}:host{--sh-class: #e3eaf2;--sh-identifier: #c699e3;--sh-sign: #66cccc;--sh-property: #c699e3;--sh-entity: #66cccc;--sh-jsxliterals: #e3eaf2;--sh-string: #91d076;--sh-keyword: #e9ae7e;--sh-comment: #8da1b9}.sh__line:before{counter-increment:sh-line-number 1;content:counter(sh-line-number);margin-right:20px;margin-left:20px;color:#a4a4a4}.custom_scrollbar{scrollbar-color:#a3a3a3 transparent;scrollbar-width:thin}.katex-html{display:none}</style><div class="absolute hidden" style="top: 0px; left: 0px; display: none;"><div style="border-radius: 5px; background: white; box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 3px 6px, rgba(15, 15, 15, 0.2) 0px 9px 24px; z-index: 9999990; pointer-events: auto; position: relative;"><div class="text-sm text-neutral-700"><div style="display: inline-flex; align-items: stretch; height: 32px; overflow: hidden;"><div role="button" tabindex="0" class="inline-flex items-center gap-[5px]" style="user-select: none; transition: background 20ms ease-in; cursor: pointer; display: flex; align-items: center; border-radius: 0px; padding-left: 7px; padding-right: 8px; white-space: nowrap; box-shadow: rgba(55, 53, 47, 0.09) 1px 0px 0px; margin-right: 1px;"><div><svg id="Layer_1" version="1.1" viewBox="0 0 16 16" fill="currentColor" height="14px" width="14px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M7,5V3c0-0.515-0.435-1-1-1C5.484,2,5.258,2.344,5,2.586L0.578,7C0.227,7.359,0,7.547,0,8s0.227,0.641,0.578,1L5,13.414  C5.258,13.656,5.484,14,6,14c0.565,0,1-0.485,1-1v-2h2c1.9,0.075,4.368,0.524,5,2.227C14.203,13.773,14.625,14,15,14  c0.563,0,1-0.438,1-1C16,7.083,12.084,5,7,5z"></path></svg></div><div class="font-medium">ChatGPT Writer</div></div><div role="button" tabindex="0" class="inline-flex items-center" style="user-select: none; transition: background 20ms ease-in; cursor: pointer; display: flex; align-items: center; border-radius: 0px; padding-left: 7px; padding-right: 8px; white-space: nowrap; box-shadow: none; margin-right: 0px;"><div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3"><path fill-rule="evenodd" d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg></div></div></div></div></div></div></template></div><button id="cgw_action_btn" tabindex="-1" style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></button><div class="glasp-extension-toaster" style="display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 9999;"><template shadowrootmode="open"><div class="glasp-extension" style="font-family: Inter;"></div></template></div><div class="glasp-extension" style="display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><template shadowrootmode="open"><div class="glasp-extension" style="font-family: Inter;"></div></template></div></body></html>
