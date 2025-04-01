@@ -121,8 +121,8 @@
         }
         
         .player-numbers {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex;
+            justify-content: center;
             gap: clamp(5px, 1vw, 10px);
             margin-top: clamp(10px, 2vh, 20px);
             padding: 5px;
@@ -143,12 +143,17 @@
             background-color: var(--button-bg);
             color: var(--text-color);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
         
         .player-btn.served {
             background-color: var(--serve-color);
             transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+        }
+        
+        .player-btn:active {
+            transform: scale(0.95);
         }
         
         .control-buttons {
@@ -275,12 +280,12 @@
                 <button class="score-btn plus" onclick="updateScore('team1', 1)">+</button>
             </div>
             <div class="player-numbers" id="team1-players">
-                <button class="player-btn" onclick="toggleServe('team1', 0)" ondblclick="editNumber('team1', 0)">1</button>
-                <button class="player-btn" onclick="toggleServe('team1', 1)" ondblclick="editNumber('team1', 1)">2</button>
-                <button class="player-btn" onclick="toggleServe('team1', 2)" ondblclick="editNumber('team1', 2)">3</button>
-                <button class="player-btn" onclick="toggleServe('team1', 3)" ondblclick="editNumber('team1', 3)">4</button>
-                <button class="player-btn" onclick="toggleServe('team1', 4)" ondblclick="editNumber('team1', 4)">5</button>
-                <button class="player-btn" onclick="toggleServe('team1', 5)" ondblclick="editNumber('team1', 5)">6</button>
+                <button class="player-btn" onclick="toggleServe('team1', 0)" data-position="1">1</button>
+                <button class="player-btn" onclick="toggleServe('team1', 1)" data-position="2">2</button>
+                <button class="player-btn" onclick="toggleServe('team1', 2)" data-position="3">3</button>
+                <button class="player-btn" onclick="toggleServe('team1', 3)" data-position="4">4</button>
+                <button class="player-btn" onclick="toggleServe('team1', 4)" data-position="5">5</button>
+                <button class="player-btn" onclick="toggleServe('team1', 5)" data-position="6">6</button>
             </div>
         </div>
         
@@ -294,12 +299,12 @@
                 <button class="score-btn plus" onclick="updateScore('team2', 1)">+</button>
             </div>
             <div class="player-numbers" id="team2-players">
-                <button class="player-btn" onclick="toggleServe('team2', 0)" ondblclick="editNumber('team2', 0)">1</button>
-                <button class="player-btn" onclick="toggleServe('team2', 1)" ondblclick="editNumber('team2', 1)">2</button>
-                <button class="player-btn" onclick="toggleServe('team2', 2)" ondblclick="editNumber('team2', 2)">3</button>
-                <button class="player-btn" onclick="toggleServe('team2', 3)" ondblclick="editNumber('team2', 3)">4</button>
-                <button class="player-btn" onclick="toggleServe('team2', 4)" ondblclick="editNumber('team2', 4)">5</button>
-                <button class="player-btn" onclick="toggleServe('team2', 5)" ondblclick="editNumber('team2', 5)">6</button>
+                <button class="player-btn" onclick="toggleServe('team2', 0)" data-position="1">1</button>
+                <button class="player-btn" onclick="toggleServe('team2', 1)" data-position="2">2</button>
+                <button class="player-btn" onclick="toggleServe('team2', 2)" data-position="3">3</button>
+                <button class="player-btn" onclick="toggleServe('team2', 3)" data-position="4">4</button>
+                <button class="player-btn" onclick="toggleServe('team2', 4)" data-position="5">5</button>
+                <button class="player-btn" onclick="toggleServe('team2', 5)" data-position="6">6</button>
             </div>
         </div>
     </div>
@@ -307,6 +312,11 @@
     <div class="control-buttons">
         <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">全螢幕</button>
         <button class="control-btn reset-btn" onclick="resetScores()">重置分數</button>
+    </div>
+
+    <div id="tooltip" style="display: none; position: fixed; bottom: 70px; right: 20px; 
+         background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px;">
+        點擊數字可切換發球位置
     </div>
 
     <script>
@@ -328,16 +338,19 @@
         }
 
         function resetScores() {
-            if (confirm('確定要重置分數嗎？')) {
+            if (confirm('確定要重置分數和發球位置嗎？')) {
                 scores.team1 = 0;
                 scores.team2 = 0;
                 document.getElementById('team1-score').textContent = '0';
                 document.getElementById('team2-score').textContent = '0';
                 
-                // 重置發球標記
+                // 清除所有發球位置標記
                 document.querySelectorAll('.player-btn').forEach(btn => {
                     btn.classList.remove('served');
                 });
+                
+                // 保存重置後的狀態
+                saveState();
             }
         }
 
@@ -389,11 +402,17 @@
         }
 
         function toggleServe(team, playerIndex) {
-            const allButtons = document.querySelectorAll('.player-btn');
-            allButtons.forEach(btn => btn.classList.remove('served'));
+            const clickedButton = document.querySelector(`#${team}-players .player-btn:nth-child(${playerIndex + 1})`);
             
-            const button = document.querySelector(`#${team}-players .player-btn:nth-child(${playerIndex + 1})`);
-            button.classList.add('served');
+            // 只清除同一隊的其他按鈕的選擇狀態
+            const teamButtons = document.querySelectorAll(`#${team}-players .player-btn`);
+            teamButtons.forEach(btn => btn.classList.remove('served'));
+            
+            // 設置新的發球位置
+            clickedButton.classList.add('served');
+            
+            // 保存狀態
+            saveState();
         }
 
         function editName(team) {
@@ -437,6 +456,48 @@
                 const fullscreenBtn = document.querySelector('.fullscreen-btn');
                 fullscreenBtn.textContent = '加入主畫面';
             }
+
+            // 顯示提示訊息的函數
+            function showTooltip() {
+                const tooltip = document.getElementById('tooltip');
+                tooltip.style.display = 'block';
+                setTimeout(() => {
+                    tooltip.style.display = 'none';
+                }, 3000);
+            }
+
+            // 在頁面首次載入時顯示提示
+            if (!localStorage.getItem('tooltipShown')) {
+                setTimeout(showTooltip, 1000);
+                localStorage.setItem('tooltipShown', 'true');
+            }
+
+            // 在頁面載入時恢復狀態
+            const savedState = localStorage.getItem('volleyballScoreboard');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                scores = state.scores;
+                document.getElementById('team1-score').textContent = scores.team1;
+                document.getElementById('team2-score').textContent = scores.team2;
+                
+                // 恢復兩隊的發球位置
+                if (state.team1Serve) {
+                    const team1Btn = document.querySelector(`#team1-players .player-btn[data-position="${state.team1Serve}"]`);
+                    if (team1Btn) team1Btn.classList.add('served');
+                }
+                if (state.team2Serve) {
+                    const team2Btn = document.querySelector(`#team2-players .player-btn[data-position="${state.team2Serve}"]`);
+                    if (team2Btn) team2Btn.classList.add('served');
+                }
+            }
+            
+            // 為每個按鈕添加 data-position 屬性
+            ['team1', 'team2'].forEach(team => {
+                const buttons = document.querySelectorAll(`#${team}-players .player-btn`);
+                buttons.forEach((btn, index) => {
+                    btn.setAttribute('data-position', index + 1);
+                });
+            });
         });
 
         // 防止雙擊選中文字
@@ -445,6 +506,27 @@
                 e.preventDefault();
             }
         });
+
+        // 保存狀態的函數
+        function saveState() {
+            const state = {
+                scores: scores,
+                team1Serve: document.querySelector('#team1-players .player-btn.served')?.getAttribute('data-position'),
+                team2Serve: document.querySelector('#team2-players .player-btn.served')?.getAttribute('data-position')
+            };
+            localStorage.setItem('volleyballScoreboard', JSON.stringify(state));
+        }
+
+        // 添加視覺提示
+        const style = document.createElement('style');
+        style.textContent = `
+            .player-btn.served {
+                background-color: var(--serve-color);
+                transform: scale(1.1);
+                box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 
 
