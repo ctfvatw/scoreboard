@@ -161,6 +161,22 @@
             z-index: 1000;
         }
         
+        :fullscreen .control-buttons {
+            display: none;
+        }
+        
+        :-webkit-full-screen .control-buttons {
+            display: none;
+        }
+        
+        :-moz-full-screen .control-buttons {
+            display: none;
+        }
+        
+        :-ms-fullscreen .control-buttons {
+            display: none;
+        }
+        
         .control-btn {
             padding: clamp(10px, 2vw, 15px) clamp(20px, 3vw, 30px);
             font-size: clamp(1rem, 2vw, 1.5rem);
@@ -326,13 +342,50 @@
         }
 
         function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
+            const elem = document.documentElement;
+            
+            if (!document.fullscreenElement && 
+                !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement && 
+                !document.msFullscreenElement) {
+                
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else {
+                    // iOS 裝置處理
+                    if (isIOS()) {
+                        alert('請點擊分享按鈕，然後選擇「加入主畫面」，以獲得更好的全螢幕體驗');
+                    }
+                }
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
                 }
             }
+        }
+
+        function isIOS() {
+            return [
+                'iPad Simulator',
+                'iPhone Simulator',
+                'iPod Simulator',
+                'iPad',
+                'iPhone',
+                'iPod'
+            ].includes(navigator.platform)
+            || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
         }
 
         function toggleServe(team, playerIndex) {
@@ -378,6 +431,12 @@
                     editName(team);
                 });
             });
+
+            // iOS 裝置檢測
+            if (isIOS() && !navigator.standalone) {
+                const fullscreenBtn = document.querySelector('.fullscreen-btn');
+                fullscreenBtn.textContent = '加入主畫面';
+            }
         });
 
         // 防止雙擊選中文字
