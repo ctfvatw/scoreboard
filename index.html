@@ -460,12 +460,6 @@
                 });
             });
 
-            // iOS 裝置檢測
-            if (isIOS() && !navigator.standalone) {
-                const fullscreenBtn = document.querySelector('.fullscreen-btn');
-                fullscreenBtn.textContent = '加入主畫面';
-            }
-
             // 顯示提示訊息的函數
             function showTooltip() {
                 const tooltip = document.getElementById('tooltip');
